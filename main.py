@@ -38,7 +38,7 @@ def main():
 
 	# Code for drawing text on image
 	txt = Image.new('RGBA', base.size, (255,255,255,0))
-	fnt = ImageFont.truetype('resources/fonts/ACaslonPro-Regular.otf', 36)
+	fnt = ImageFont.truetype('resources/fonts/Inconsolata-Regular.ttf', 36)
 
 
 	# Load the database
