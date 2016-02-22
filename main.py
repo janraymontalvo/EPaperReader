@@ -18,102 +18,144 @@
 # -Read input buttons (hw) (interrupt)
 
 from PIL import Image, ImageDraw, ImageFont
-
+import PIL.ImageOps
 
 keys =  [
-		['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
-		['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',' J'],
-		['K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'],
-		['U', 'V', 'W', 'X', 'Y', 'Z', ' ', 127, 0, 0]
-		]
-		#DEL = 127, 0 = OK
-prebase = None
+        ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+        ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',' J'],
+        ['K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'],
+        ['U', 'V', 'W', 'X', 'Y', 'Z', ' ', 127, 0, 0]
+        ]
+        #DEL = 127, 0 = OK
+
 base = None
 lastkey = ''
 
 
 def ShowKeyboard():
-	global base, prebase,lastkey
-	prebase = base
-	keyboard = Image.open('resources/ui/keyboard.png').convert('RGBA')
-	base.paste(keyboard, (0, 560), keyboard)
-	curr_selection = 
-	curr_region = 
+    global base,lastkey
+    keyboard = Image.open('resources/ui/keyboard.png').convert('RGB')
+    base.paste(keyboard, (0, 560))
 
-	# Loop: Get button input
-	# Get selection and region and invert color 
+    #Select letter 'A'
+
+    letter = [0, 0] # Corresponds to what letter in the keys array
+    keybox = [17, 570, 56, 622] # Coordinate for the button on the keyboard. Convert to tuple when used on functions..
+    
+    keyregion = base.crop(tuple(keybox))
+    base.paste(PIL.ImageOps.invert(keyregion), keybox)
+    base.show()
+    base.save('cache/screens/screen.png', "PNG")
+
+    # Loop: Get button input
+    while True:
+        inp = raw_input("Input: ") #Change this to button input'
+        inp = inp.strip()
+        if inp == 'done':
+            break
+        elif inp == 'right':
+            if letter[1] == 9 or cmp(letter, [8, 8]) == 0:
+                pass
+            else:
+                # Uninvert current selection 
+                base.paste(keyregion, keybox)
+                # Update variables 
+                letter[1] += 1
+                keybox[0] += 45
+                keybox[2] += 45
+                # Invert new selection
+                keyregion = base.crop(tuple(keybox))
+                base.paste(PIL.ImageOps.invert(keyregion), keybox)
+                base.show()
+                base.save('cache/screens/screen.png', "PNG")
+                print keys[letter[0]][letter[1]]
+        elif inp == 'left':
+            if letter[1] == 0:
+                pass
+            else:
+                # Uninvert current selection 
+                base.paste(keyregion, keybox)
+                # Update variables 
+                letter[1] -= 1
+                keybox[0] -= 45
+                keybox[2] -= 45
+                # Invert new selection
+                keyregion = base.crop(tuple(keybox))
+                base.paste(PIL.ImageOps.invert(keyregion), keybox)
+                base.show()
+                base.save('cache/screens/screen.png', "PNG")
+                print keys[letter[0]][letter[1]]
+            pass
+        elif inp == 'up':
+            if letter[0] == 0:
+                pass
+            else:
+                # Uninvert current selection 
+                base.paste(keyregion, keybox)
+                # Update variables 
+                letter[0] -= 1
+                keybox[1] -= 56
+                keybox[3] -= 56
+                # Invert new selection
+                keyregion = base.crop(tuple(keybox))
+                base.paste(PIL.ImageOps.invert(keyregion), keybox)
+                base.show()
+                base.save('cache/screens/screen.png', "PNG")
+                print keys[letter[0]][letter[1]]
+            pass
+        elif inp == 'down':
+            if letter[0] == 3 or cmp(letter, [9, 2]):
+                pass
+            else:
+                # Uninvert current selection 
+                base.paste(keyregion, keybox)
+                # Update variables 
+                letter[0] += 1
+                keybox[1] += 56
+                keybox[3] += 56
+                # Invert new selection
+                keyregion = base.crop(tuple(keybox))
+                base.paste(PIL.ImageOps.invert(keyregion), keybox)
+                base.show()
+                base.save('cache/screens/screen.png', "PNG")
+                print keys[letter[0]][letter[1]]    
+            pass
+        elif inp == 'ok':
+            pass
+        elif inp == 'cancel':
+            pass
+        else:
+            pass
+
+    keyboard.close
 
 
 def HideKeyboard():
-	base = prebase
-	prebase = None
+    pass
 
 def Main():
-	# Draw the log in screen
-	global base, lastkey
-	base = Image.open('resources/ui/epd.png').convert('RGBA')
-	temp_im = Image.open('resources/ui/label_title.png')
-	base.paste(temp_im, (95,40), temp_im)
-	temp_im = Image.open('resources/ui/label_login.png')
-	base.paste(temp_im, (190,135), temp_im)
-	temp_im = Image.open('resources/ui/label_id.png')
-	base.paste(temp_im, (220,200), temp_im)
-	temp_im = Image.open('resources/ui/element_textbox.png')
-	base.paste(temp_im, (71,231), temp_im)
-	base.paste(temp_im, (71,331), temp_im)
-	temp_im = Image.open('resources/ui/label_password.png')
-	base.paste(temp_im, (184,300), temp_im)
-	base.show()
-	base.save('cache/screens/screen.png', "PNG")
+    # Draw the log in screen
+    global base, lastkey
+    base = Image.open('resources/ui/epd.png').convert('RGB')
+    temp_im = Image.open('resources/ui/screen_login.png')
+    base.paste(temp_im, (0,0), temp_im)
 
-	# Code for drawing text on image
-	txt = Image.new('RGBA', base.size, (255,255,255,0))
-	fnt = ImageFont.truetype('resources/fonts/ACaslonPro-Regular.otf', 35)
+    # Code for drawing text on image
+    txt = Image.new('RGB', base.size, (255,255,255,0))
+    fnt = ImageFont.truetype('resources/fonts/ACaslonPro-Regular.otf', 35)
 
-	ShowKeyboard()
-	base.show()
-	base.save('cache/screens/screen.png', "PNG")
+    ShowKeyboard()
+    base.show()
+    base.save('cache/screens/screen.png', "PNG")
 
-	# # Get input for Log in
-	# username = ''
-	# x = 80
-	# while True:
-	# 	key = raw_input("ID: ") # Wait for button input. Substitute for on-screen keyboardbutton!!
-	# 	if key.strip() == 'done':
-	# 		break
-	# 	username += key
-	# 	d = ImageDraw.Draw(txt)
-	# 	d.text((x,239), key.strip(), font=fnt, fill=(0,0,0,255))
-	# 	base = Image.alpha_composite(base, txt)
-	# 	x += 20
-	# 	base.show()
-	# 	# base.save('cache/screens/screen.png', "PNG")
-		
-	# print username
 
-	# # Get input for password
-	# password = ''
-	# x = 80
-	# while True:
-	# 	key = raw_input("Pass: ") # Same as above
-	# 	if key.strip() == 'done':
-	# 		break
-	# 	password += key
-	# 	d = ImageDraw.Draw(txt)
-	# 	d.text((x,345), "* " * len(key.strip()), font=fnt, fill=(0,0,0,255))
-	# 	base = Image.alpha_composite(base, txt)
-	# 	x += 20
-	# 	base.show()
-	# 	# base.save('cache/screens/screen.png', "PNG")
+    # Attemp log in
+    
 
-	# print password
-
-	# # Attemp log in
-	
-
-	# base.show()
-	# # base.save('cache/screens/screen.png', "PNG")
-
+    # base.show()
+    # # base.save('cache/screens/screen.png', "PNG")
+    base.close()
+    temp_im.close()
 
 if __name__ == '__main__':
     Main()
