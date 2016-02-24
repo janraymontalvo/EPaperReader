@@ -54,6 +54,13 @@ def UpdateDisplay():
     if args.pi:
         pass
 
+def GetInput():
+    if args.not_pi:
+        inp = raw_input("Input: ") #Change this to button input'
+        return inp.strip()
+
+    if args.pi:
+        return button_press()
 
 def ShowKeyboard():
     global base,lastkey
@@ -70,8 +77,7 @@ def ShowKeyboard():
 
     # Loop: Get button input
     while True:
-        inp = raw_input("Input: ") #Change this to button input'
-        inp = inp.strip()
+        inp = GetInput()
         if inp == 'done':
             break
         elif inp == 'right':
