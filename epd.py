@@ -134,5 +134,3 @@ def update_screen(img):
 
 def shutdown(pin):
     call('halt',shell=False)
-
-
