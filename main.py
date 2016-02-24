@@ -43,16 +43,17 @@ lastkey = ''
 
 
 if args.pi:
+   
     import epd
 
 
 def UpdateDisplay():
+    base.save('cache/screens/screen.png', "PNG")
     if args.not_pi:
         base.show()
-        base.save('cache/screens/screen.png', "PNG")
 
     if args.pi:
-        pass
+        epd.update_screen(base)
 
 def GetInput():
     if args.not_pi:
@@ -60,7 +61,7 @@ def GetInput():
         return inp.strip()
 
     if args.pi:
-        inp = button_press()
+        inp = epd.button_press()
         return inp
 
 def ShowKeyboard():

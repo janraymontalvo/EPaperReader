@@ -3,6 +3,8 @@ from subprocess import call
 from array import *
 import time
 import RPi.GPIO as GPIO # GPIO library
+from PIL import Image
+
 # GPIO SETUP
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
@@ -119,8 +121,7 @@ def convertTo1bit_PixelFormatType4(picdata):
     return newPicData
 
 
-def update_screen():
-    img = Image.open('cache/screens/screen.png')
+def update_screen(img):
     img = img.convert('LA')
     img=img.load()
     rawIntPixelData = toIntArray(img)  # good
@@ -128,7 +129,7 @@ def update_screen():
     rawBytePixelData = convertTo1bit_PixelFormatType4(rawIntPixelData)
     upload_image(rawBytePixelData)
     send_commands(update_display) 
-    time.sleep(0.25)
+    # time.sleep(0.25)
 
 
 def shutdown(pin):
