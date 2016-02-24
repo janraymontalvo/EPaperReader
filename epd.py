@@ -118,6 +118,20 @@ def convertTo1bit_PixelFormatType4(picdata):
             row = row + 60
     return newPicData
 
-    
+
+def update_screen():
+    img = Image.open('cache/screens/screen.png')
+    img = img.convert('LA')
+    img=img.load()
+    rawIntPixelData = toIntArray(img)  # good
+    rawIntPixelData = downsampleTo1bitGrayScale(rawIntPixelData)  # good
+    rawBytePixelData = convertTo1bit_PixelFormatType4(rawIntPixelData)
+    upload_image(rawBytePixelData)
+    send_commands(update_display) 
+    time.sleep(0.25)
+
+
 def shutdown(pin):
     call('halt',shell=False)
+
+

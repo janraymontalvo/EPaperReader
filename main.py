@@ -60,7 +60,8 @@ def GetInput():
         return inp.strip()
 
     if args.pi:
-        return button_press()
+        inp = button_press()
+        return inp
 
 def ShowKeyboard():
     global base,lastkey
