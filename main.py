@@ -17,19 +17,42 @@
 # -Load battery life (hw) 
 # -Read input buttons (hw) (interrupt)
 
-from PIL import Image, ImageDraw, ImageFont
+import argparse
 import PIL.ImageOps
+from PIL import Image, ImageDraw, ImageFont
 
-keys =  [
+
+#Parse args
+parser = argparse.ArgumentParser()
+parser.add_argument("--not-pi",
+                    action="store_true",
+                    help="Execute the script on a non-Raspberry Pi computer.")
+parser.add_argument("--pi", 
+                    action="store_true",
+                    help="Execute the script on the Raspberry Pi.")
+args = parser.parse_args()
+
+
+keys =  [ #DEL = 127, 0 = OK
         ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
         ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',' J'],
         ['K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'],
-        ['U', 'V', 'W', 'X', 'Y', 'Z', ' ', 127, 0, 0]
-        ]
-        #DEL = 127, 0 = OK
-
+        ['U', 'V', 'W', 'X', 'Y', 'Z', ' ', 127, 0, 0]]
 base = None
 lastkey = ''
+
+
+if args.pi:
+    import epd
+
+
+def UpdateDisplay():
+    if args.not_pi:
+        base.show()
+        base.save('cache/screens/screen.png', "PNG")
+
+    if args.pi:
+        pass
 
 
 def ShowKeyboard():
@@ -38,14 +61,12 @@ def ShowKeyboard():
     base.paste(keyboard, (0, 560))
 
     #Select letter 'A'
-
     letter = [0, 0] # Corresponds to what letter in the keys array
     keybox = [17, 570, 56, 622] # Coordinate for the button on the keyboard. Convert to tuple when used on functions..
     
     keyregion = base.crop(tuple(keybox))
     base.paste(PIL.ImageOps.invert(keyregion), keybox)
-    base.show()
-    base.save('cache/screens/screen.png', "PNG")
+    UpdateDisplay()
 
     # Loop: Get button input
     while True:
@@ -66,8 +87,7 @@ def ShowKeyboard():
                 # Invert new selection
                 keyregion = base.crop(tuple(keybox))
                 base.paste(PIL.ImageOps.invert(keyregion), keybox)
-                base.show()
-                base.save('cache/screens/screen.png', "PNG")
+                UpdateDisplay()
                 print keys[letter[0]][letter[1]]
         elif inp == 'left':
             if letter[1] == 0:
@@ -82,8 +102,7 @@ def ShowKeyboard():
                 # Invert new selection
                 keyregion = base.crop(tuple(keybox))
                 base.paste(PIL.ImageOps.invert(keyregion), keybox)
-                base.show()
-                base.save('cache/screens/screen.png', "PNG")
+                UpdateDisplay()
                 print keys[letter[0]][letter[1]]
             pass
         elif inp == 'up':
@@ -99,12 +118,11 @@ def ShowKeyboard():
                 # Invert new selection
                 keyregion = base.crop(tuple(keybox))
                 base.paste(PIL.ImageOps.invert(keyregion), keybox)
-                base.show()
-                base.save('cache/screens/screen.png', "PNG")
+                UpdateDisplay()
                 print keys[letter[0]][letter[1]]
             pass
         elif inp == 'down':
-            if letter[0] == 3 or cmp(letter, [9, 2]):
+            if letter[0] == 3 or cmp(letter, [9, 2]) == 0:
                 pass
             else:
                 # Uninvert current selection 
@@ -116,13 +134,14 @@ def ShowKeyboard():
                 # Invert new selection
                 keyregion = base.crop(tuple(keybox))
                 base.paste(PIL.ImageOps.invert(keyregion), keybox)
-                base.show()
-                base.save('cache/screens/screen.png', "PNG")
+                UpdateDisplay()
                 print keys[letter[0]][letter[1]]    
             pass
-        elif inp == 'ok':
-            pass
-        elif inp == 'cancel':
+        elif inp == 'select':
+            # Buffer selected key
+            lastkey = keys[letter[0]][letter[1]]
+        elif inp == 'back':
+            # Hide keyboard
             pass
         else:
             pass
@@ -132,6 +151,7 @@ def ShowKeyboard():
 
 def HideKeyboard():
     pass
+
 
 def Main():
     # Draw the log in screen
@@ -145,17 +165,15 @@ def Main():
     fnt = ImageFont.truetype('resources/fonts/ACaslonPro-Regular.otf', 35)
 
     ShowKeyboard()
-    base.show()
-    base.save('cache/screens/screen.png', "PNG")
-
 
     # Attemp log in
     
 
-    # base.show()
-    # # base.save('cache/screens/screen.png', "PNG")
+    # UpdateDisplay
     base.close()
     temp_im.close()
 
+
 if __name__ == '__main__':
     Main()
+    # spi.close()
