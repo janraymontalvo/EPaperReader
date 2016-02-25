@@ -32,16 +32,24 @@ def Today():
 
 
 def LogIn(username, password):
-    newpassword = hashlib.sha224(password).hexdigest()
-    c.execute("SELECT password FROM userAccounts WHERE idnum=?", (username,))
-    checkpass = c.fetchone()[0]
-    if(newpassword == checkpass):
-        c.execute("SELECT * FROM userAccounts WHERE idnum=?", (username,))
-        output = c.fetchone()
-        user = User(output[1], output[2], output[3], output[4], output[5], output[7])
-        return user
-    else:
+    flag = 0;
+    c.execute("SELECT idnum FROM userAccounts")
+    for row in c.fetchall():
+        if username == row[0]:
+            flag = 1
+    if(flag!=1):    
         return None
+    else:    
+        newpassword = hashlib.sha224(password).hexdigest()
+        c.execute("SELECT password FROM userAccounts WHERE idnum=?", (username,))
+        checkpass = c.fetchone()[0]
+        if(newpassword == checkpass):
+            c.execute("SELECT * FROM userAccounts WHERE idnum=?", (username,))
+            output = c.fetchone()
+            user = User(output[1],output[2],output[3],output[4],output[5],output[7])
+            return user
+        else:
+            return None
 
 
 def ListBooks(username):

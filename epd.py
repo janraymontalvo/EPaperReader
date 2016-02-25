@@ -64,7 +64,7 @@ def button_press():
 	print "3"
         while(GPIO.input(36)==GPIO.HIGH):
             pass
-	return "done"
+	return "select"
     if(GPIO.input(37)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
         print "4"
         while(GPIO.input(37)==GPIO.HIGH):
@@ -79,7 +79,7 @@ def button_press():
 	print "6"       
         while(GPIO.input(33)==GPIO.HIGH):
             pass        
-	return "back"
+	return "cancel"
 
 
 def toIntArray(img):
@@ -100,19 +100,29 @@ def downsampleTo1bitGrayScale(imgIntArray):
 
 
 def convertTo1bit_PixelFormatType4(picdata):
-    newPicData = [0]*len(picdata)
+    newPicData = [0]*(len(picdata)/8)
     row = 30
     s = 1
     for i in range(0, len(picdata),16):
         newPicData[row - s] = (
-            ((picdata[i + 6] << 7) & 0x80) | ((picdata[i + 14] << 6) & 0x40) | ((picdata[i + 4] << 5) & 0x20) | (
-                (picdata[i + 12] << 4) & 0x10) | ((picdata[i + 2] << 3) & 0x08) | ((picdata[i + 10] << 2) & 0x04) | (
-                (picdata[i + 0] << 1) & 0x02) | ((picdata[i + 8] << 0) & 0x01))
+            ((picdata[i + 6] << 7) & 0x80) |
+            ((picdata[i + 14] << 6) & 0x40) | 
+            ((picdata[i + 4] << 5) & 0x20) | 
+            ((picdata[i + 12] << 4) & 0x10) | 
+            ((picdata[i + 2] << 3) & 0x08) | 
+            ((picdata[i + 10] << 2) & 0x04) | 
+            ((picdata[i + 0] << 1) & 0x02) | 
+            ((picdata[i + 8] << 0) & 0x01))
 
         newPicData[row + 30 - s] = (
-            ((picdata[i + 1] << 7) & 0x80) | ((picdata[i + 9] << 6) & 0x40) | ((picdata[i + 3] << 5) & 0x20) | (
-                (picdata[i + 11] << 4) & 0x10) | ((picdata[i + 5] << 3) & 0x08) | ((picdata[i + 13] << 2) & 0x04) | (
-                (picdata[i + 7] << 1) & 0x02) | ((picdata[i + 15] << 0) & 0x01))
+            ((picdata[i + 1] << 7) & 0x80) |
+            ((picdata[i + 9] << 6) & 0x40) | 
+            ((picdata[i + 3] << 5) & 0x20) | 
+            ((picdata[i + 11] << 4) & 0x10) |
+            ((picdata[i + 5] << 3) & 0x08) | 
+            ((picdata[i + 13] << 2) & 0x04) | 
+            ((picdata[i + 7] << 1) & 0x02) | 
+            ((picdata[i + 15] << 0) & 0x01))
 
         s = s + 1
         if s == 31:

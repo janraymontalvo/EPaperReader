@@ -21,6 +21,7 @@ import argparse
 import PIL.ImageOps
 from PIL import Image, ImageDraw, ImageFont
 import db
+import epub
 
 #Parse args
 parser = argparse.ArgumentParser()
@@ -40,7 +41,7 @@ keys =  [ #DEL = 127, 0 = OK
         ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',' J'],
         ['K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'],
         ['U', 'V', 'W', 'X', 'Y', 'Z', ' ', 127, 0, 0]]
-base = None
+base, user, books = None, None, None
 lastkey = ''
 
 if args.pi:
@@ -50,6 +51,12 @@ if args.pi:
 def UpdateDisplay():
     ''' Update the EPD screen '''
     base.save('cache/screens/screen.png', "PNG")
+    tinyfnt = ImageFont.truetype('resources/fonts/OpenSans-Regular.ttf', 18)
+    now = db.Today()
+    temp_im = Image.open('resources/ui/element_status_bar.png')
+    base.paste(temp_im, (0,0))
+    draw = ImageDraw.Draw(base)
+    draw.text((265, 2), now, fill=(0,0,0), font=tinyfnt)
     if args.not_pi:
         base.show()
     
@@ -74,7 +81,7 @@ def ShowKeyboard():
     keyboard = Image.open('resources/ui/keyboard.png').convert('RGB')
     base.paste(keyboard, (0, 560))
 
-    #Select letter 'A'
+    #Select '0'
     letter = [0, 0] # Corresponds to what letter in the keys array
     keybox = [17, 570, 56, 622] # Coordinate for the button on the keyboard. Convert to tuple when used on functions..
     
@@ -160,42 +167,103 @@ def ShowKeyboard():
     keyboard.close
 
 
-def HideKeyboard():
-    pass
+def ShowLibrary():
+    global base, user, books
+
+    textfnt = ImageFont.truetype('resources/fonts/ACaslonPro-Regular.otf', 25)
+    bkfnt = ImageFont.truetype('resources/fonts/ACaslonPro-Regular.otf', 22)
+    authfnt = ImageFont.truetype('resources/fonts/ACaslonPro-Regular.otf', 20)
+    temp_im = Image.open('resources/ui/screen_library.png').convert('RGB')
+
+    base.paste(temp_im, (0,0))
+
+    draw = ImageDraw.Draw(base)
+    name =  user.fname + ' ' + user.mname[0] + '. ' + user.lname
+    draw.text((95, 55), name, fill=(0, 0, 0), font=textfnt)
+
+    # List all Books
+    books = db.ListBooks(user.uname)
+    pages = (len(books) / 8) + 1
+
+    for i in range(0, len(books)):
+        draw.text((42, 205 + (i * 58)), books[i].title, fill=(0,0,0,0), font=bkfnt)
+        draw.text((42, 230 + (i * 58)) , books[i].author, fill=(0,0,0,0), font=authfnt)
+
+    selected = 0
+    box = [32, 198, 448, 254]
+    boxregion = base.crop(tuple(box))
+    base.paste(PIL.ImageOps.invert(boxregion), box)
+    UpdateDisplay()
+    while True:
+        inp = GetInput()
+        if inp == 'up':
+            if selected == 0:
+                pass
+            else:
+                base.paste(boxregion, box)
+                selected -= 1
+                box[1] -= 58
+                box[3] -= 58
+                boxregion = base.crop(tuple(box))
+                base.paste(PIL.ImageOps.invert(boxregion), box)
+                UpdateDisplay()
+        elif inp == 'down':
+            print selected
+            if selected >= len(books) - 1:
+                pass
+            else:
+                base.paste(boxregion, box)
+                selected += 1
+                box[1] += 58
+                box[3] += 58
+                boxregion = base.crop(tuple(box))
+                base.paste(PIL.ImageOps.invert(boxregion), box)
+                UpdateDisplay()
+        elif inp == 'left':
+            pass
+        elif inp == 'right':
+            pass
+        elif inp == 'select':
+            epub.dump_epub(books[selected].fpath)
+            print books[selected].fpath
+        elif inp == 'cancel':
+            pass
+
+    temp_im.close()
+
+
+def BookView(book):
+    global base
+    temp_im = Image.open('resources/ui/screen_readingview.png').convert('RGB')
+    base.paste(temp_im, 0,0)
+
+
+
 
 
 def Main():
     # Draw the log in screen
-    global base, lastkey
+    global base, user
     base = Image.open('resources/ui/epd.png').convert('RGB')
-    temp_im = Image.open('resources/ui/screen_login.png')
-    base.paste(temp_im, (0,0), temp_im)
-
-    # Code for drawing text on image
-    txt = Image.new('RGB', base.size, (255,255,255,0))
-    fnt = ImageFont.truetype('resources/fonts/ACaslonPro-Regular.otf', 35)
-
+    # base = Image.open('resources/ui/epd.png').convert('RGB')
+    # temp_im = Image.open('resources/ui/screen_login.png')
+    # base.paste(temp_im, (0,0))
+    # UpdateDisplay()
     # ShowKeyboard()
 
+    # Library screen 
     username = raw_input("ID: ")
     password = raw_input("Password: ")
-
     user = db.LogIn(username, password)
 
     if user is not None:
-        print 'Name: ' + user.fname + ' ' + user.mname[0] + '. ' + user.lname
-        print ''
-        books = db.ListBooks(user.uname)
-        # print books
-        for i in books:
-            print i.title
-            print i.author
-            print i.fpath
-            print i.year
+        ShowLibrary()
+    else:
+        print 'Wrong id/pass'
+
 
     # UpdateDisplay
     base.close()
-    temp_im.close()
 
 
 if __name__ == '__main__':
