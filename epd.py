@@ -50,36 +50,37 @@ def upload_image(image_data):
 
  
 def button_press():
+    # WASD arrows, J = Select, K = cancel
     if(GPIO.input(40)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
 	print "1"
         while(GPIO.input(40)==GPIO.HIGH):
             pass
-	return "right"
+	return "d"
     if(GPIO.input(38)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
 	print "2"
         while(GPIO.input(38)==GPIO.HIGH):
             pass
-	return "down"
+	return "s"
     if(GPIO.input(36)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
 	print "3"
         while(GPIO.input(36)==GPIO.HIGH):
             pass
-	return "select"
+	return "j"
     if(GPIO.input(37)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
         print "4"
         while(GPIO.input(37)==GPIO.HIGH):
             pass
-	return "left"
+	return "a"
     if(GPIO.input(35)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
         print "5"
         while(GPIO.input(35)==GPIO.HIGH):
             pass
-	return "up"
+	return "w"
     if(GPIO.input(33)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
 	print "6"       
         while(GPIO.input(33)==GPIO.HIGH):
             pass        
-	return "cancel"
+	return "K"
 
 
 def toIntArray(img):

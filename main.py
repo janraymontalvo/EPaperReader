@@ -35,17 +35,20 @@ if not (args.pi or args.not_pi):
     parser.print_help()
     parser.error('No parameter given.')
 
+if args.pi:
+    import epd
+
 
 keys =  [ #DEL = 127, 0 = OK
         ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
-        ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',' J'],
+        ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'],
         ['K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'],
         ['U', 'V', 'W', 'X', 'Y', 'Z', ' ', 127, 0, 0]]
 base, user, books = None, None, None
-lastkey = ''
-
-if args.pi:
-    import epd
+p_flag = False
+pressed = ''
+textbuffer = ''
+crsr = [83, 286] # Cursor for text input from keyboard
 
 
 def UpdateDisplay():
@@ -77,10 +80,11 @@ def GetInput():
 
 def ShowKeyboard():
     ''' Keyboard '''
-    global base,lastkey
+    global base, pressed, textbuffer
+    textbuffer = ''
     keyboard = Image.open('resources/ui/keyboard.png').convert('RGB')
     base.paste(keyboard, (0, 560))
-
+    
     #Select '0'
     letter = [0, 0] # Corresponds to what letter in the keys array
     keybox = [17, 570, 56, 622] # Coordinate for the button on the keyboard. Convert to tuple when used on functions..
@@ -90,11 +94,12 @@ def ShowKeyboard():
     UpdateDisplay()
 
     # Loop: Get button input
+    # WASD arrows, J = Select, K = cancel
     while True:
         inp = GetInput()
-        if inp == 'right':
-            if letter[1] == 9 or cmp(letter, [8, 8]) == 0:
-                pass
+        if inp == 'd':
+            if letter[1] == 9 or cmp(letter, [3, 8]) == 0:
+                continue
             else:
                 # Uninvert current selection 
                 base.paste(keyregion, keybox)
@@ -105,11 +110,10 @@ def ShowKeyboard():
                 # Invert new selection
                 keyregion = base.crop(tuple(keybox))
                 base.paste(PIL.ImageOps.invert(keyregion), keybox)
-                UpdateDisplay()
                 print keys[letter[0]][letter[1]]
-        elif inp == 'left':
+        elif inp == 'a':
             if letter[1] == 0:
-                pass
+                continue
             else:
                 # Uninvert current selection 
                 base.paste(keyregion, keybox)
@@ -120,12 +124,10 @@ def ShowKeyboard():
                 # Invert new selection
                 keyregion = base.crop(tuple(keybox))
                 base.paste(PIL.ImageOps.invert(keyregion), keybox)
-                UpdateDisplay()
                 print keys[letter[0]][letter[1]]
-            pass
-        elif inp == 'up':
+        elif inp == 'w':
             if letter[0] == 0:
-                pass
+                continue
             else:
                 # Uninvert current selection 
                 base.paste(keyregion, keybox)
@@ -136,12 +138,10 @@ def ShowKeyboard():
                 # Invert new selection
                 keyregion = base.crop(tuple(keybox))
                 base.paste(PIL.ImageOps.invert(keyregion), keybox)
-                UpdateDisplay()
                 print keys[letter[0]][letter[1]]
-            pass
-        elif inp == 'down':
-            if letter[0] == 3 or cmp(letter, [9, 2]) == 0:
-                pass
+        elif inp == 's':
+            if letter[0] == 3 or cmp(letter, [2, 9]) == 0:
+                continue
             else:
                 # Uninvert current selection 
                 base.paste(keyregion, keybox)
@@ -152,19 +152,59 @@ def ShowKeyboard():
                 # Invert new selection
                 keyregion = base.crop(tuple(keybox))
                 base.paste(PIL.ImageOps.invert(keyregion), keybox)
-                UpdateDisplay()
                 print keys[letter[0]][letter[1]]    
-            pass
-        elif inp == 'select':
+        elif inp == 'j':
             # Buffer selected key
-            lastkey = keys[letter[0]][letter[1]]
+            pressed = keys[letter[0]][letter[1]]
+            print pressed
+            if pressed == 127:
+                pass
+            elif pressed == 0:
+                break
+            else:
+                textbuffer += pressed
+                fnt = ImageFont.truetype('resources/fonts/Inconsolata-Bold.ttf', 20)
+                draw = ImageDraw.Draw(base)
+                if p_flag:
+                    pressed = '*'
+                draw.text(tuple(crsr), pressed, fill=(0,0,0), font=fnt)
+                crsr[0] += 15
         elif inp == 'back':
             # Hide keyboard
-            pass
+            continue
         else:
-            pass
+            continue
+
+        UpdateDisplay()
 
     keyboard.close
+
+
+def ShowLogIn():
+    global base, textbuffer, crsr
+    temp_im = Image.open('resources/ui/screen_login.png')
+    base.paste(temp_im, (0,0))
+    
+    ShowKeyboard()
+    username = textbuffer
+    print username
+
+    crsr = [83, 415]
+    p_flag = True
+    ShowKeyboard()
+    p_flag = False
+    password = textbuffer
+    print password
+
+    user = db.LogIn(username, password)
+    print user.uname
+    print user.fname
+    print user.lname
+    print user.mname
+    print user.userType
+    print user.year
+
+    temp_im.close()
 
 
 def ShowLibrary():
@@ -224,8 +264,8 @@ def ShowLibrary():
         elif inp == 'right':
             pass
         elif inp == 'select':
-            epub.dump_epub(books[selected].fpath)
             print books[selected].fpath
+            BookView(books[selected])
         elif inp == 'cancel':
             pass
 
@@ -235,9 +275,11 @@ def ShowLibrary():
 def BookView(book):
     global base
     temp_im = Image.open('resources/ui/screen_readingview.png').convert('RGB')
-    base.paste(temp_im, 0,0)
-
-
+    base.paste(temp_im, (0,0))
+    titlefnt = ImageFont.truetype('resources/fonts/ACaslonPro-Regular.otf', 22)
+    draw = ImageDraw.Draw(base)
+    draw.text((42, 38), book.title, fill=(0, 0, 0), font=titlefnt)
+    UpdateDisplay()
 
 
 
@@ -245,21 +287,20 @@ def Main():
     # Draw the log in screen
     global base, user
     base = Image.open('resources/ui/epd.png').convert('RGB')
-    # base = Image.open('resources/ui/epd.png').convert('RGB')
-    # temp_im = Image.open('resources/ui/screen_login.png')
-    # base.paste(temp_im, (0,0))
+
+    ShowLogIn()
     # UpdateDisplay()
     # ShowKeyboard()
 
     # Library screen 
-    username = raw_input("ID: ")
-    password = raw_input("Password: ")
-    user = db.LogIn(username, password)
+    # username = raw_input("ID: ")
+    # password = raw_input("Password: ")
+    # user = db.LogIn(username, password)
 
-    if user is not None:
-        ShowLibrary()
-    else:
-        print 'Wrong id/pass'
+    # if user is not None:
+    #     ShowLibrary()
+    # else:
+    #     print 'Wrong id/pass'
 
 
     # UpdateDisplay
