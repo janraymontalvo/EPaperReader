@@ -163,10 +163,10 @@ def ShowKeyboard():
                 break
             else:
                 textbuffer += pressed
-                fnt = ImageFont.truetype('resources/fonts/Inconsolata-Bold.ttf', 20)
-                draw = ImageDraw.Draw(base)
                 if p_flag:
                     pressed = '*'
+                fnt = ImageFont.truetype('resources/fonts/Inconsolata-Bold.ttf', 20)
+                draw = ImageDraw.Draw(base)
                 draw.text(tuple(crsr), pressed, fill=(0,0,0), font=fnt)
                 crsr[0] += 15
         elif inp == 'back':
@@ -181,7 +181,8 @@ def ShowKeyboard():
 
 
 def ShowLogIn():
-    global base, textbuffer, crsr
+    global base, textbuffer, crsr, user, p_flag
+  
     temp_im = Image.open('resources/ui/screen_login.png')
     base.paste(temp_im, (0,0))
     
@@ -197,12 +198,13 @@ def ShowLogIn():
     print password
 
     user = db.LogIn(username, password)
-    print user.uname
-    print user.fname
-    print user.lname
-    print user.mname
-    print user.userType
-    print user.year
+    if user is None:
+        draw = ImageDraw.Draw(base)
+        textfnt = ImageFont.truetype('resources/fonts/ACaslonPro-Regular.otf', 22)
+        draw.text((140, 490), 'Wrong id or password.', fill=(0, 0, 0), font=textfnt)
+        UpdateDisplay()
+    else:
+        ShowLibrary()
 
     temp_im.close()
 
