@@ -238,7 +238,7 @@ def ShowLibrary():
     UpdateDisplay()
     while True:
         inp = GetInput()
-        if inp == 'up':
+        if inp == 'w':
             if selected == 0:
                 pass
             else:
@@ -249,7 +249,7 @@ def ShowLibrary():
                 boxregion = base.crop(tuple(box))
                 base.paste(PIL.ImageOps.invert(boxregion), box)
                 UpdateDisplay()
-        elif inp == 'down':
+        elif inp == 's':
             print selected
             if selected >= len(books) - 1:
                 pass
@@ -261,14 +261,14 @@ def ShowLibrary():
                 boxregion = base.crop(tuple(box))
                 base.paste(PIL.ImageOps.invert(boxregion), box)
                 UpdateDisplay()
-        elif inp == 'left':
+        elif inp == 'a':
             pass
-        elif inp == 'right':
+        elif inp == 'd':
             pass
-        elif inp == 'select':
+        elif inp == 'j':
             print books[selected].fpath
             BookView(books[selected])
-        elif inp == 'cancel':
+        elif inp == 'k':
             pass
 
     temp_im.close()
