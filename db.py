@@ -3,9 +3,6 @@ import getpass
 import hashlib
 import time
 
-conn = sqlite3.connect('userAccounts.db')
-c = conn.cursor()
-
 
 class User:
     def __init__(self, idnum, fname, lname, mname, userType, year):
@@ -32,8 +29,10 @@ def Today():
 
 
 def LogIn(username, password):
+    conn = sqlite3.connect('userAccounts.db')
+    c = conn.cursor()
     flag = 0;
-    c.execute("SELECT idnum FROM userAccounts")
+    c.execute('SELECT idnum FROM userAccounts')
     for row in c.fetchall():
         if username == row[0]:
             flag = 1
@@ -41,7 +40,7 @@ def LogIn(username, password):
         return None
     else:    
         newpassword = hashlib.sha224(password).hexdigest()
-        c.execute("SELECT password FROM userAccounts WHERE idnum=?", (username,))
+        c.execute('SELECT password FROM userAccounts WHERE idnum=?', (username,))
         checkpass = c.fetchone()[0]
         if(newpassword == checkpass):
             c.execute("SELECT * FROM userAccounts WHERE idnum=?", (username,))
@@ -51,19 +50,25 @@ def LogIn(username, password):
         else:
             return None
 
+    c.close()
+
 
 def ListBooks(username):
-    c.execute("SELECT userType FROM userAccounts WHERE idnum=?", (username,))
+    conn = sqlite3.connect('userAccounts.db')
+    c = conn.cursor()
+    c.execute('SELECT userType FROM userAccounts WHERE idnum=?', (username,))
     userType = c.fetchone()[0]
     if(userType==1):
-        c.execute("SELECT year FROM userAccounts WHERE idnum=?", (username,))
+        c.execute('SELECT year FROM userAccounts WHERE idnum=?', (username,))
         year = c.fetchone()[0]
-        c.execute("SELECT * FROM Books WHERE year = ?", (year,))
+        c.execute('SELECT * FROM Books WHERE year = ?', (year,))
     else:
-        c.execute("SELECT * FROM Books")
+        c.execute('SELECT * FROM Books')
     output = c.fetchall()
 
     books = []
     for i in output:
     	books.append(Book(i[1], i[2], i[3], i[4]))
     return books
+
+    c.close()

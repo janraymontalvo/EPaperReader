@@ -6,7 +6,7 @@
 import formatter, htmllib, os, StringIO, zipfile
 #import base64, webbrowser, re, readline, tempfile, locale
 
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 
 #locale.setlocale(locale.LC_ALL, 'en_US.utf-8')
 basedir = ''
@@ -17,6 +17,14 @@ def check_epub(fl):
     '''
     if os.path.isfile(fl) and os.path.splitext(fl)[1].lower() == '.epub':
         return True
+
+def open_epub(fl):
+    if not check_epub(fl):
+        print 'File ' + fl + ' was not found'
+        return None
+
+    return zipfile.ZipFile(fl, 'r')
+    print 'found!'
 
 def dump_epub(fl, maxcol=float("+inf")):
     '''
@@ -51,7 +59,7 @@ def table_of_contents(fl):
     soup =  BeautifulSoup(fl.read(opf))
 
     # title
-    yield (soup.find('dc:title').text, None)
+    # yield (soup.find('dc:title').text, None)
 
     # all files, not in order
     x, ncx = {}, None
@@ -84,20 +92,6 @@ def table_of_contents(fl):
             yield (z[section].encode('utf-8'), section.encode('utf-8'))
         else:
             yield (u'', section.encode('utf-8').strip())
-
-
-def list_chaps(screen, chaps, start, length):
-    for i, (title, src) in enumerate(chaps[start:start+length]):
-        try:
-            if start == 0:
-                screen.addstr(i, 0, '      {0}'.format(title), curses.A_BOLD)
-            else:
-                screen.addstr(i, 0, '{0:-5} {1}'.format(start, title))
-        except:
-            pass
-        start += 1
-    screen.refresh()
-    return i
 
 def textify(html_snippet, img_size=(80, 45), maxcol=72):
     ''' Text dump of HTML Document '''

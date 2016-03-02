@@ -8,6 +8,15 @@ from PIL import Image
 # GPIO SETUP
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
+
+def shutdown(pin):
+    img = Image.open('resources/ui/epd.png').convert('RGB')
+    update_screen(img)
+    call('halt',shell=False)
+
+
+GPIO.setup(7,GPIO.IN) #pin 7
+GPIO.add_event_detect(7,GPIO.RISING,callback=shutdown,bouncetime=200)
 GPIO.setup(10,GPIO.IN) #output from display to pi /TC_BUSY (if 0=busy  if 1=ready to receive new commands)
 GPIO.setup(12,GPIO.OUT) # /TC_EN (1=disabled 0=enabled)
 GPIO.output(12,GPIO.HIGH)
@@ -51,36 +60,37 @@ def upload_image(image_data):
  
 def button_press():
     # WASD arrows, J = Select, K = cancel
-    if(GPIO.input(40)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
-	print "1"
-        while(GPIO.input(40)==GPIO.HIGH):
-            pass
-	return "d"
-    if(GPIO.input(38)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
-	print "2"
-        while(GPIO.input(38)==GPIO.HIGH):
-            pass
-	return "s"
-    if(GPIO.input(36)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
-	print "3"
-        while(GPIO.input(36)==GPIO.HIGH):
-            pass
-	return "j"
-    if(GPIO.input(37)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
-        print "4"
-        while(GPIO.input(37)==GPIO.HIGH):
-            pass
-	return "a"
-    if(GPIO.input(35)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
-        print "5"
-        while(GPIO.input(35)==GPIO.HIGH):
-            pass
-	return "w"
-    if(GPIO.input(33)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
-	print "6"       
-        while(GPIO.input(33)==GPIO.HIGH):
-            pass        
-	return "K"
+    while True:
+        if(GPIO.input(40)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
+	    print "1"
+            while(GPIO.input(40)==GPIO.HIGH):
+                pass
+	    return "d"
+        if(GPIO.input(38)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
+	    print "2"
+            while(GPIO.input(38)==GPIO.HIGH):
+                pass
+	    return "s"
+        if(GPIO.input(36)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
+	    print "3"
+            while(GPIO.input(36)==GPIO.HIGH):
+                pass
+	    return "j"
+        if(GPIO.input(37)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
+            print "4"
+            while(GPIO.input(37)==GPIO.HIGH):
+                pass
+	    return "a"
+        if(GPIO.input(35)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
+            print "5"
+            while(GPIO.input(35)==GPIO.HIGH):
+                pass
+	    return "w"
+        if(GPIO.input(33)==GPIO.HIGH and GPIO.input(10)==GPIO.HIGH):
+	    print "6"       
+            while(GPIO.input(33)==GPIO.HIGH):
+                pass        
+	    return "k"
 
 
 def toIntArray(img):
@@ -141,7 +151,3 @@ def update_screen(img):
     upload_image(rawBytePixelData)
     send_commands(update_display) 
     # time.sleep(0.25)
-
-
-def shutdown(pin):
-    call('halt',shell=False)
