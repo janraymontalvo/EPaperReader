@@ -328,7 +328,8 @@ def BookView(book):
     base.paste(temp_im, (0,0))
     PrintText(book.title, (42, 38), titlefnt)
 
-    ebook = epub.open_epub(book.fpath)
+    # ebook = epub.open_epub(book.fpath)
+    ebook = epub.open_epub('test.epub')
     contents = list([i for i in epub.table_of_contents(ebook)])
 
     cons = 0
@@ -371,15 +372,18 @@ def BookView(book):
                     textarea = list(textregion)
                     draw.rectangle(textregion, fill=(255,255,255))
 
-                    if line - ctr <= 0 and cons <= 0:
-                        cons -= 1                            
+                    if line - (ctr * 2) > 0:
+                        line -= ctr * 2
                     else:
-                        line -= ctr
+                        cons -= 2
+                        break
 
+                    ctr = 0
                     continue
                 elif inp == 'd':
                     textarea = list(textregion)
                     draw.rectangle(textregion, fill=(255,255,255))
+                    ctr = 0
                     continue
                 elif inp == 'w':
                     continue
@@ -389,7 +393,7 @@ def BookView(book):
                     continue
                 elif inp == 'k':
                     return
-        
+
         cons += 1
 
 
