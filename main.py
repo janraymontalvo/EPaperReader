@@ -124,21 +124,32 @@ def ShowKeyboard(passwordfield=False):
         inp = GetInput()
         if inp == 'd':
             if letter[1] == 9 or cmp(letter, [3, 8]) == 0:
-                continue
+                base.paste(keyregion, keybox)
+                letter[1]= 0
+                keybox[0] = 17
+                keybox[2] = 56
             else:
-                # Uninvert current selection 
+                # Uninvert current selection
                 base.paste(keyregion, keybox)
                 # Update variables 
                 letter[1] += 1
                 keybox[0] += 45
                 keybox[2] += 45
                 # Invert new selection
-                keyregion = base.crop(tuple(keybox))
-                base.paste(PIL.ImageOps.invert(keyregion), keybox)
-                print 'Letter Selected: {0}'.format(keys[letter[0]][letter[1]])
+            keyregion = base.crop(tuple(keybox))
+            base.paste(PIL.ImageOps.invert(keyregion), keybox)
+            print 'Letter Selected: {0}'.format(keys[letter[0]][letter[1]])
         elif inp == 'a':
             if letter[1] == 0:
-                continue
+                base.paste(keyregion, keybox)
+                if letter[0]==3:
+                    letter[1]=8
+                    keybox[0] = 17 +(45*8)
+                    keybox[2] = 56 +(45*8)
+                else:
+                    letter[1]=9
+                    keybox[0] = 17 +(45*9)
+                    keybox[2] = 56 +(45*9)
             else:
                 # Uninvert current selection 
                 base.paste(keyregion, keybox)
@@ -147,12 +158,15 @@ def ShowKeyboard(passwordfield=False):
                 keybox[0] -= 45
                 keybox[2] -= 45
                 # Invert new selection
-                keyregion = base.crop(tuple(keybox))
-                base.paste(PIL.ImageOps.invert(keyregion), keybox)
-                print 'Letter Highlighted: {0}'.format(keys[letter[0]][letter[1]])
+            keyregion = base.crop(tuple(keybox))
+            base.paste(PIL.ImageOps.invert(keyregion), keybox)
+            print 'Letter Highlighted: {0}'.format(keys[letter[0]][letter[1]])
         elif inp == 'w':
             if letter[0] == 0:
-                continue
+                base.paste(keyregion, keybox)
+                letter[0]= 3
+                keybox[1] = 570 + (3*56)
+                keybox[3] = 622 + (3*56)
             else:
                 # Uninvert current selection 
                 base.paste(keyregion, keybox)
@@ -161,12 +175,15 @@ def ShowKeyboard(passwordfield=False):
                 keybox[1] -= 56
                 keybox[3] -= 56
                 # Invert new selection
-                keyregion = base.crop(tuple(keybox))
-                base.paste(PIL.ImageOps.invert(keyregion), keybox)
-                print 'Letter Highlighted: {0}'.format(keys[letter[0]][letter[1]])
+            keyregion = base.crop(tuple(keybox))
+            base.paste(PIL.ImageOps.invert(keyregion), keybox)
+            print 'Letter Highlighted: {0}'.format(keys[letter[0]][letter[1]])
         elif inp == 's':
             if letter[0] == 3 or cmp(letter, [2, 9]) == 0:
-                continue
+                base.paste(keyregion, keybox)
+                letter[0]= 0
+                keybox[1] = 570
+                keybox[3] = 622
             else:
                 # Uninvert current selection 
                 base.paste(keyregion, keybox)
@@ -175,9 +192,9 @@ def ShowKeyboard(passwordfield=False):
                 keybox[1] += 56
                 keybox[3] += 56
                 # Invert new selection
-                keyregion = base.crop(tuple(keybox))
-                base.paste(PIL.ImageOps.invert(keyregion), keybox)
-                print 'Letter Highlighted: {0}'.format(keys[letter[0]][letter[1]])   
+            keyregion = base.crop(tuple(keybox))
+            base.paste(PIL.ImageOps.invert(keyregion), keybox)
+            print 'Letter Highlighted: {0}'.format(keys[letter[0]][letter[1]])
         elif inp == 'j':
             # Buffer selected key
             pressed = keys[letter[0]][letter[1]]
@@ -221,17 +238,17 @@ def ShowLogIn():
         temp_im = Image.open(pi_dir+'/resources/ui/screen_login.png')
         base.paste(temp_im, (0,0))
 
-        # if wrong_pass: 
-        #     PrintText('Wrong id or password.', (140, 490), ImageFont.truetype('resources/fonts/ACaslonPro-Regular.otf', 22))
+        if wrong_pass: 
+            PrintText('Wrong id or password.', (140, 490), ImageFont.truetype('resources/fonts/ACaslonPro-Regular.otf', 22))
         
-        # crsr = [83, 286]
-        # ShowKeyboard()   
-        # username = keyboardbuffer
-        # crsr = [83, 415]
-        # ShowKeyboard(True)
-        # password = keyboardbuffer
+        crsr = [83, 286]
+        ShowKeyboard()   
+        username = keyboardbuffer
+        crsr = [83, 415]
+        ShowKeyboard(True)
+        password = keyboardbuffer
 
-        # user = db.LogIn(username, password)
+        user = db.LogIn(username, password)
         user = db.LogIn('201', '123')
         if user is None:
             print "Wrong id or password"
@@ -241,8 +258,6 @@ def ShowLogIn():
             wrong_pass = False
             ShowLibrary(user)
 
-    # user = db.LogIn('201', '123')
-    # ShowLibrary(user)
 
 
 def ShowLibrary(user):
