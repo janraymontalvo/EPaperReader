@@ -18,7 +18,7 @@
 # -Read input buttons (hw) (interrupt)
 
 import PIL.ImageOps
-import argparse, db, epub, zipfile, textwrap
+import argparse, db, epub, zipfile, textwrap, html2text
 from PIL import Image, ImageDraw, ImageFont
 from bs4 import BeautifulSoup
 
@@ -38,7 +38,7 @@ if not (args.pi or args.not_pi):
 
 if args.not_pi:
     import os
-    pi_dir = '/home/ceruleous/Documents/EPaperReader'
+    pi_dir = '/home/ceruleous/Documents/Documents/GitHub/EPaperReader'
 
 if args.pi:
     import epd
@@ -50,9 +50,8 @@ keys =  [ #DEL = 127, 0 = OK
         ['K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'],
         ['U', 'V', 'W', 'X', 'Y', 'Z', ' ', 127, 0, 0]]
 base = None
-p_flag = False
 pressed = ''
-textbuffer = ''
+keyboardbuffer = ''
 crsr = [83, 286] # Cursor for text input from keyboard
 
 def Main():
@@ -79,11 +78,11 @@ def UpdateDisplay():
     print 'Updating Display'
     now = db.Today()
     temp_im = Image.open(pi_dir + '/resources/ui/element_status_bar.png')
-    base.save(pi_dir + '/cache/screens/screen.png', "PNG")
     base.paste(temp_im, (0,0))
     temp_im.close()
     PrintText(now, (260, 2), ImageFont.truetype(pi_dir + '/resources/fonts/OpenSans-Regular.ttf', 18))
     if args.not_pi:
+        base.save(pi_dir + 'screen.png', "PNG")
         base.show()
     
     if args.pi:
@@ -101,11 +100,13 @@ def GetInput():
         return inp
 
 
-def ShowKeyboard():
+def ShowKeyboard(passwordfield=False):
+    # TODO: Circular keyboard
+    # TODO: Enable numpad
     ''' Keyboard '''
-    print 'Keyboard'
-    global base, pressed, textbuffer
-    textbuffer = ''
+    print 'Showing Keyboard'
+    global base, pressed, keyboardbuffer
+    keyboardbuffer = ''
     keyboard = Image.open(pi_dir + '/resources/ui/keyboard.png').convert('RGB')
     base.paste(keyboard, (0, 560))
     
@@ -148,7 +149,7 @@ def ShowKeyboard():
                 # Invert new selection
                 keyregion = base.crop(tuple(keybox))
                 base.paste(PIL.ImageOps.invert(keyregion), keybox)
-                print 'Letter Selected: {0}'.format(keys[letter[0]][letter[1]])
+                print 'Letter Highlighted: {0}'.format(keys[letter[0]][letter[1]])
         elif inp == 'w':
             if letter[0] == 0:
                 continue
@@ -162,7 +163,7 @@ def ShowKeyboard():
                 # Invert new selection
                 keyregion = base.crop(tuple(keybox))
                 base.paste(PIL.ImageOps.invert(keyregion), keybox)
-                print 'Letter Selected: {0}'.format(keys[letter[0]][letter[1]])
+                print 'Letter Highlighted: {0}'.format(keys[letter[0]][letter[1]])
         elif inp == 's':
             if letter[0] == 3 or cmp(letter, [2, 9]) == 0:
                 continue
@@ -176,20 +177,26 @@ def ShowKeyboard():
                 # Invert new selection
                 keyregion = base.crop(tuple(keybox))
                 base.paste(PIL.ImageOps.invert(keyregion), keybox)
-                print 'Letter Selected: {0}'.format(keys[letter[0]][letter[1]])   
+                print 'Letter Highlighted: {0}'.format(keys[letter[0]][letter[1]])   
         elif inp == 'j':
             # Buffer selected key
             pressed = keys[letter[0]][letter[1]]
-            print pressed
+            print 'Letter Selected: {0}'.format(pressed)
             if pressed == 127:
                 # TODO: Erase char
-                pass
+                if keyboardbuffer == '':
+                    keyboardbuffer = keyboardbuffer[:-1]
+                    crsr[0] -= 15
+                    ImageDraw.Draw(base).rectangle(tuple(crsr) + (crsr[0] + 9, crsr[1] + 24), fill=(255,255,255))
+                print 'Text Buffer: {0}'.format(keyboardbuffer)
             elif pressed == 0:
+                print 'Text Buffer: {0}'.format(keyboardbuffer)
                 break
             else:
-                textbuffer += pressed
-                if p_flag:
+                keyboardbuffer += pressed
+                if passwordfield:
                     pressed = '*'
+                
                 PrintText(pressed, tuple(crsr), ImageFont.truetype(pi_dir + '/resources/fonts/Inconsolata-Bold.ttf', 20))
                 crsr[0] += 15
         elif inp == 'k':
@@ -205,33 +212,37 @@ def ShowKeyboard():
 # TODO: 
 # - Erase character when pressing backspace
 def ShowLogIn():
-    global base, textbuffer, crsr, user, p_flag
-#    print 'Log In View'
-#    while True:
-#         temp_im = Image.open(pi_dir+'/resources/ui/screen_login.png')
-#         base.paste(temp_im, (0,0))
-#         temp_im.close(user)
-#         ShowKeyboard()
-#         username = textbuffer
-#         print username
-#         crsr = [83, 415]
-#         p_flag = True
-#         ShowKeyboard()
-#         p_flag = False
-#         password = textbuffer
-#         print password
+    global base, keyboardbuffer, crsr, user
+    print 'Log In View'
 
-#         user = db.LogIn(username, password)
-#         if user is None:
-#             PrintText('Wrong id or password.', (140, 490), ImageFont.truetype('resources/fonts/ACaslonPro-Regular.otf', 22))
-#             # TODO: Clear text fields!
-#             UpdateDisplay()
-#         else:
-#             ShowLibrary(user)
+    wrong_pass = False
 
-    user = db.LogIn('201', '123')
-    ShowLibrary(user)
-   
+    while True:
+        temp_im = Image.open(pi_dir+'/resources/ui/screen_login.png')
+        base.paste(temp_im, (0,0))
+
+        # if wrong_pass: 
+        #     PrintText('Wrong id or password.', (140, 490), ImageFont.truetype('resources/fonts/ACaslonPro-Regular.otf', 22))
+        
+        # crsr = [83, 286]
+        # ShowKeyboard()   
+        # username = keyboardbuffer
+        # crsr = [83, 415]
+        # ShowKeyboard(True)
+        # password = keyboardbuffer
+
+        # user = db.LogIn(username, password)
+        user = db.LogIn('201', '123')
+        if user is None:
+            print "Wrong id or password"
+            wrong_pass = True
+            continue
+        else:
+            wrong_pass = False
+            ShowLibrary(user)
+
+    # user = db.LogIn('201', '123')
+    # ShowLibrary(user)
 
 
 def ShowLibrary(user):
@@ -242,68 +253,76 @@ def ShowLibrary(user):
     bkfnt = ImageFont.truetype(pi_dir + '/resources/fonts/ACaslonPro-Regular.otf', 22)
     authfnt = ImageFont.truetype(pi_dir + '/resources/fonts/ACaslonPro-Regular.otf', 20)
     temp_im = Image.open(pi_dir + '/resources/ui/screen_library.png').convert('RGB')
-    base.paste(temp_im, (0,0))
-    temp_im.close()
-    name =  user.fname + ' ' + user.mname[0] + '. ' + user.lname
-    PrintText(name, (95, 55), textfnt)
-    # List all Books
-    books = db.ListBooks(user.uname)
-    # pages = (len(books) / 8) + 1
-
-    for i in range(0, len(books)):
-        PrintText(books[i].title, (42, 205 + (i * 58)), bkfnt)
-        PrintText(books[i].author, (42, 230 + (i * 58)), authfnt)
-
-    selected = 0
-    box = [32, 198, 448, 254]
-    print books[selected].title
-    boxregion = base.crop(tuple(box))
-    base.paste(PIL.ImageOps.invert(boxregion), box)
 
     while True:
-        UpdateDisplay()
-        inp = GetInput()
-        if inp == 'w':
-            if selected == 0:
+        base.paste(temp_im, (0,0))
+        name =  user.fname + ' ' + user.mname[0] + '. ' + user.lname
+        PrintText(name, (95, 55), textfnt)
+        books = db.ListBooks(user.uname)
+
+        for i in range(0, len(books)):
+            PrintText(books[i].title, (42, 205 + (i * 58)), bkfnt)
+            PrintText(books[i].author, (42, 230 + (i * 58)), authfnt)
+
+        selected = 0
+        box = [32, 198, 448, 254]
+        print books[selected].title
+        boxregion = base.crop(tuple(box))
+        base.paste(PIL.ImageOps.invert(boxregion), box)
+
+        while True:
+            UpdateDisplay()
+            inp = GetInput()
+            if inp == 'w':
+                if selected == 0:
+                    pass
+                else:
+                    base.paste(boxregion, box)
+                    selected -= 1
+                    box[1] -= 58
+                    box[3] -= 58
+                    boxregion = base.crop(tuple(box))
+                    base.paste(PIL.ImageOps.invert(boxregion), box)  
+                    print "Selected book: {0}".format(books[selected].fpath)       
+            elif inp == 's':
+                print selected
+                if selected >= len(books) - 1:
+                    pass
+                else:
+                    base.paste(boxregion, box)
+                    selected += 1
+                    box[1] += 58
+                    box[3] += 58
+                    boxregion = base.crop(tuple(box))
+                    base.paste(PIL.ImageOps.invert(boxregion), box)
+                    print "Selected book: {0}".format(books[selected].fpath)
+            elif inp == 'a':
                 pass
-            else:
-                base.paste(boxregion, box)
-                selected -= 1
-                box[1] -= 58
-                box[3] -= 58
-                boxregion = base.crop(tuple(box))
-                base.paste(PIL.ImageOps.invert(boxregion), box)         
-        elif inp == 's':
-            print selected
-            if selected >= len(books) - 1:
+            elif inp == 'd':
                 pass
-            else:
-                base.paste(boxregion, box)
-                selected += 1
-                box[1] += 58
-                box[3] += 58
-                boxregion = base.crop(tuple(box))
-                base.paste(PIL.ImageOps.invert(boxregion), box)
-        elif inp == 'a':
-            pass
-        elif inp == 'd':
-            pass
-        elif inp == 'j':
-            print books[selected].fpath
-            BookView(books[selected])
-        elif inp == 'k':
-            pass
+            elif inp == 'j':
+                print books[selected].fpath
+                BookView(books[selected])
+                break
+            elif inp == 'k':
+                # Close the view and cleanup
+                temp_im.close()
+                return
+
 
 
 def BookView(book):
     global base
     print 'Book View'
+
     titlefnt = ImageFont.truetype(pi_dir + '/resources/fonts/ACaslonPro-Regular.otf', 21)
     textfnt = ImageFont.truetype(pi_dir + '/resources/fonts/DejaVuSansMono.ttf', 15)
     temp_im = Image.open(pi_dir + '/resources/ui/screen_readingview.png').convert('RGB')
     pagewrap = textwrap.TextWrapper(width=858, break_long_words=False, replace_whitespace=False)
     linewrap = textwrap.TextWrapper(width=43, break_long_words=True, replace_whitespace=False)
     textregion = (47, 72, 432, 735) # Text box coordinates
+    h = html2text.HTML2Text()
+    h.ignore_links = True
     
     draw = ImageDraw.Draw(base)
     base.paste(temp_im, (0,0))
@@ -316,13 +335,13 @@ def BookView(book):
     while cons < len(contents):
         print contents[cons]
         soup = BeautifulSoup(ebook.read(contents[cons][1]))
-        chaptertext = epub.textify(unicode(soup.find('body')).encode('utf-8'), maxcol=float("+inf"),)
+        # chaptertext = epub.textify(unicode(soup.find('body')).encode('utf-8'), maxcol=float("+inf"),)
+        chaptertext = h.handle(soup.find('body').prettify())
         paragraphs = chaptertext.splitlines(True)
 
         lines = []
         for i in paragraphs:
             x = linewrap.wrap(i)
-
 
             if x == []:
                 lines.append('\n')
@@ -339,6 +358,8 @@ def BookView(book):
             line += 1
             ctr += 1
 
+            print 'cons: {0}'.format(cons)
+            print 'line: {0}'.format(line)
             # If Text area is full or there is no more text to print...
             if textarea[1] >= 715 or line >= len(lines):
                 print line 
@@ -350,11 +371,8 @@ def BookView(book):
                     textarea = list(textregion)
                     draw.rectangle(textregion, fill=(255,255,255))
 
-                    if cons == 0:
-                        return
-                    elif line - ctr <= 0:
-                        print line - ctr
-                        cons -= 1
+                    if line - ctr <= 0 and cons <= 0:
+                        cons -= 1                            
                     else:
                         line -= ctr
 
@@ -367,9 +385,11 @@ def BookView(book):
                     continue
                 elif inp == 's':
                     continue
-                else:
+                elif inp == 'j':
                     continue
-            
+                elif inp == 'k':
+                    return
+        
         cons += 1
 
 

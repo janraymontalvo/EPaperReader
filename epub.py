@@ -49,7 +49,7 @@ def table_of_contents(fl):
     global basedir
 
     # find opf file
-    soup = BeautifulSoup(fl.read('META-INF/container.xml'))
+    soup = BeautifulSoup(fl.read('META-INF/container.xml'), "lxml")
     opf = dict(soup.find('rootfile').attrs)['full-path']
 
     basedir = os.path.dirname(opf)
